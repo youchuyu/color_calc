@@ -322,4 +322,6 @@ class ColorCalc {
   }
 }
 
+console.log("dddd");
+
 export default ColorCalc;
