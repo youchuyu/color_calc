@@ -1,8 +1,9 @@
 /**
  * RGB to HSL
  * @param {[number, number, number]} rgb - Red,Green,Blue: 0~255
+ * @return {[number, number, number]} hsl - Hue: 0~360, Saturation:0~100%, Lightness: 0~100%
  */
-export function rgb2hsl([r, g, b]: RGB) {
+export function rgb2hsl([r, g, b]: RGB): HSL {
   r /= 255;
   g /= 255;
   b /= 255;
@@ -38,11 +39,33 @@ export function rgb2hsl([r, g, b]: RGB) {
   return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
 }
 
+function rgb(t: number, p: number, q: number) {
+  if (t < 1.0 / 6.0) {
+    return p + (q - p) * 6.0 * t;
+  } else if (t >= 1.0 / 6.0 && t < 1.0 / 2.0) {
+    return q;
+  } else if (t >= 1.0 / 2.0 && t < 2.0 / 3.0) {
+    return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
+  } else {
+    return p;
+  }
+}
+
+function _rgb(t: number) {
+  if (t < 0) {
+    return t + 1.0;
+  } else if (t > 1) {
+    return t - 1.0;
+  } else {
+    return t;
+  }
+}
 /**
  * HSL to RGB
  * @param {[number, number, number]} hsl - Hue: 0~360, Saturation:0~100%, Lightness: 0~100%
+ * @param {[number, number, number]} rgb - Red,Green,Blue: 0~255
  */
-export function hsl2rgb([h, s, l]: HSL) {
+export function hsl2rgb([h, s, l]: HSL): RGB {
   h /= 360;
   s /= 100;
   l /= 100;
@@ -52,28 +75,6 @@ export function hsl2rgb([h, s, l]: HSL) {
   let b = 0;
   let p = 0;
   let q = 0;
-
-  function rgb(t: number, p: number, q: number) {
-    if (t < 1.0 / 6.0) {
-      return p + (q - p) * 6.0 * t;
-    } else if (t >= 1.0 / 6.0 && t < 1.0 / 2.0) {
-      return q;
-    } else if (t >= 1.0 / 2.0 && t < 2.0 / 3.0) {
-      return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
-    } else {
-      return p;
-    }
-  }
-
-  function _rgb(t: number) {
-    if (t < 0) {
-      return t + 1.0;
-    } else if (t > 1) {
-      return t - 1.0;
-    } else {
-      return t;
-    }
-  }
 
   if (s === 0) {
     r = g = b = l;
@@ -89,11 +90,105 @@ export function hsl2rgb([h, s, l]: HSL) {
 }
 
 /**
+ * @param {[number, number, number]} rgb - Red,Green,Blue: 0~255
+ * @return {[number, number, number]} hsv - Hue: 0~360, Saturation:0~100%, Value: 0~100%
+ */
+export function rgb2hsv([r, g, b]: RGB): HSV {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  var max = Math.max(r, g, b);
+  var min = Math.min(r, g, b);
+  var diff = max - min;
+  var h = 0;
+  var v = max;
+  var s = max === 0 ? 0 : diff / max; // h
+
+  if (max === min) {
+    h = 0;
+  } else if (max === r && g >= b) {
+    h = 60 * ((g - b) / diff);
+  } else if (max === r && g < b) {
+    h = 60 * ((g - b) / diff) + 360;
+  } else if (max === g) {
+    h = 60 * ((b - r) / diff) + 120;
+  } else if (max === b) {
+    h = 60 * ((r - g) / diff) + 240;
+  }
+  return [Math.round(h), Math.round(s * 100), Math.round(v * 100)];
+}
+
+/**
+ * @param {[number, number, number]} hsv - Hue: 0~360, Saturation:0~100%, Value: 0~100%
+ * @return {[number, number, number]} rgb - Red,Green,Blue: 0~255
+ */
+export function hsv2rgb([h, s, v]: HSV): RGB {
+  h /= 1;
+  s /= 100;
+  v /= 100;
+  var r = 0;
+  var g = 0;
+  var b = 0;
+
+  if (s === 0) {
+    r = g = b = v;
+  } else {
+    var _h = h / 60;
+
+    var i = Math.floor(_h);
+    var f = _h - i;
+    var p = v * (1 - s);
+    var q = v * (1 - f * s);
+    var t = v * (1 - (1 - f) * s);
+
+    switch (i) {
+      case 0:
+        r = v;
+        g = t;
+        b = p;
+        break;
+
+      case 1:
+        r = q;
+        g = v;
+        b = p;
+        break;
+
+      case 2:
+        r = p;
+        g = v;
+        b = t;
+        break;
+
+      case 3:
+        r = p;
+        g = q;
+        b = v;
+        break;
+
+      case 4:
+        r = t;
+        g = p;
+        b = v;
+        break;
+
+      case 5:
+        r = v;
+        g = p;
+        b = q;
+        break;
+    }
+  }
+
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+/**
  * Lab to RGB
  * @param {[number, number, number]} Lab - Lightness: 0~100, a:-128~127, b:-128~127
  * @returns {[number, number, number]} RGB - Red,Green,Blue: 0~255
  */
-export function lab2rgb(lab: Lab) {
+export function lab2rgb(lab: Lab): RGB {
   let y = (lab[0] + 16) / 116,
     x = lab[1] / 500 + y,
     z = y - lab[2] / 200,
@@ -125,7 +220,7 @@ export function lab2rgb(lab: Lab) {
  * @param {[number, number, number]} RGB - Red,Green,Blue: 0~255
  * @returns {[number, number, number]} Lab - Lightness: 0~100, a:-128~127, b:-128~127
  */
-export function rgb2lab(rgb: RGB) {
+export function rgb2lab(rgb: RGB): Lab {
   let r = rgb[0] / 255,
     g = rgb[1] / 255,
     b = rgb[2] / 255,
@@ -155,7 +250,7 @@ export function rgb2lab(rgb: RGB) {
 /**
  * Hex to RGB
  * @param hex - #RRGGBB
- * @returns {[number, number, number]} RGB - Red,Green,Blue: 0~255
+ * @returns {RGB} RGB - Red,Green,Blue: 0~255
  */
 export function hex2rgb(hex: string) {
   return [
@@ -167,7 +262,7 @@ export function hex2rgb(hex: string) {
 
 /**
  * RGB to Hex
- * @param {[number, number, number]} RGB - Red,Green,Blue: 0~255
+ * @param {RGB} rgb - Red,Green,Blue: 0~255
  * @returns {string} hex - #RRGGBB
  */
 export function rgb2hex(rgb: RGB) {
