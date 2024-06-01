@@ -3,7 +3,7 @@
  * @param {[number, number, number]} rgb - Red,Green,Blue: 0~255
  * @return {[number, number, number]} hsl - Hue: 0~360, Saturation:0~100%, Lightness: 0~100%
  */
-export function rgb2hsl([r, g, b]: RGB): HSL {
+export function rgb2hsl([r, g, b]: RGB, isRound = true): HSL {
   r /= 255;
   g /= 255;
   b /= 255;
@@ -36,7 +36,9 @@ export function rgb2hsl([r, g, b]: RGB): HSL {
     s = diff / (2 - 2 * l);
   }
 
-  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+  return isRound
+    ? [Math.round(h), Math.round(s * 100), Math.round(l * 100)]
+    : [h, s * 100, l * 100];
 }
 
 function rgb(t: number, p: number, q: number) {
@@ -65,7 +67,7 @@ function _rgb(t: number) {
  * @param {[number, number, number]} hsl - Hue: 0~360, Saturation:0~100%, Lightness: 0~100%
  * @param {[number, number, number]} rgb - Red,Green,Blue: 0~255
  */
-export function hsl2rgb([h, s, l]: HSL): RGB {
+export function hsl2rgb([h, s, l]: HSL, isRound = true): RGB {
   h /= 360;
   s /= 100;
   l /= 100;
@@ -86,14 +88,16 @@ export function hsl2rgb([h, s, l]: HSL): RGB {
     b = rgb(_rgb(h - 1.0 / 3.0), p, q);
   }
 
-  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  return isRound
+    ? [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)]
+    : [r * 255, g * 255, b * 255];
 }
 
 /**
  * @param {[number, number, number]} rgb - Red,Green,Blue: 0~255
  * @return {[number, number, number]} hsv - Hue: 0~360, Saturation:0~100%, Value: 0~100%
  */
-export function rgb2hsv([r, g, b]: RGB): HSV {
+export function rgb2hsv([r, g, b]: RGB, isRound = true): HSV {
   r /= 255;
   g /= 255;
   b /= 255;
@@ -115,14 +119,16 @@ export function rgb2hsv([r, g, b]: RGB): HSV {
   } else if (max === b) {
     h = 60 * ((r - g) / diff) + 240;
   }
-  return [Math.round(h), Math.round(s * 100), Math.round(v * 100)];
+  return isRound
+    ? [Math.round(h), Math.round(s * 100), Math.round(v * 100)]
+    : [h, s * 100, v * 100];
 }
 
 /**
  * @param {[number, number, number]} hsv - Hue: 0~360, Saturation:0~100%, Value: 0~100%
  * @return {[number, number, number]} rgb - Red,Green,Blue: 0~255
  */
-export function hsv2rgb([h, s, v]: HSV): RGB {
+export function hsv2rgb([h, s, v]: HSV, isRound = true): RGB {
   h /= 1;
   s /= 100;
   v /= 100;
@@ -180,7 +186,9 @@ export function hsv2rgb([h, s, v]: HSV): RGB {
     }
   }
 
-  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  return isRound
+    ? [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)]
+    : [r * 255, g * 255, b * 255];
 }
 
 /**
@@ -188,7 +196,7 @@ export function hsv2rgb([h, s, v]: HSV): RGB {
  * @param {[number, number, number]} Lab - Lightness: 0~100, a:-128~127, b:-128~127
  * @returns {[number, number, number]} RGB - Red,Green,Blue: 0~255
  */
-export function lab2rgb(lab: Lab): RGB {
+export function lab2rgb(lab: Lab, isRound = true): RGB {
   let y = (lab[0] + 16) / 116,
     x = lab[1] / 500 + y,
     z = y - lab[2] / 200,
@@ -208,19 +216,26 @@ export function lab2rgb(lab: Lab): RGB {
   g = g > 0.0031308 ? 1.055 * Math.pow(g, 1 / 2.4) - 0.055 : 12.92 * g;
   b = b > 0.0031308 ? 1.055 * Math.pow(b, 1 / 2.4) - 0.055 : 12.92 * b;
 
-  return [
-    Math.round(Math.max(0, Math.min(1, r)) * 255),
-    Math.round(Math.max(0, Math.min(1, g)) * 255),
-    Math.round(Math.max(0, Math.min(1, b)) * 255),
-  ];
+  return isRound
+    ? [
+        Math.round(Math.max(0, Math.min(1, r)) * 255),
+        Math.round(Math.max(0, Math.min(1, g)) * 255),
+        Math.round(Math.max(0, Math.min(1, b)) * 255),
+      ]
+    : [
+        Math.max(0, Math.min(1, r)) * 255,
+        Math.max(0, Math.min(1, g)) * 255,
+        Math.max(0, Math.min(1, b)) * 255,
+      ];
 }
 
 /**
  * RGB to Lab
- * @param {[number, number, number]} RGB - Red,Green,Blue: 0~255
+ * @param {[number, number, number]} RGB  - Red,Green,Blue: 0~255
+ * @param {boolean} isRound - 是否四舍五入
  * @returns {[number, number, number]} Lab - Lightness: 0~100, a:-128~127, b:-128~127
  */
-export function rgb2lab(rgb: RGB): Lab {
+export function rgb2lab(rgb: RGB, isRound = true): Lab {
   let r = rgb[0] / 255,
     g = rgb[1] / 255,
     b = rgb[2] / 255,
@@ -240,11 +255,13 @@ export function rgb2lab(rgb: RGB): Lab {
   y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
   z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
 
-  return [
-    Math.round(116 * y - 16),
-    Math.round(500 * (x - y)),
-    Math.round(200 * (y - z)),
-  ];
+  return isRound
+    ? [
+        Math.round(116 * y - 16),
+        Math.round(500 * (x - y)),
+        Math.round(200 * (y - z)),
+      ]
+    : [116 * y - 16, 500 * (x - y), 200 * (y - z)];
 }
 
 /**
